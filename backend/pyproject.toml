@@ -73,7 +73,8 @@ select = [
     "SIM",               # simplify
     "RUF",               # ruff-specific
 ]
-ignore = ["E501"]
+# B008: FastAPI standard pattern is `Depends(...)` / `Header(...)` in defaults.
+ignore = ["E501", "B008"]
 
 [tool.ruff.format]
 quote-style = "double"

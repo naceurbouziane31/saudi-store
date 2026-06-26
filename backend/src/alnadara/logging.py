@@ -11,8 +11,7 @@ def configure_logging(*, debug: bool = False) -> None:
     timestamper = structlog.processors.TimeStamper(fmt="iso", utc=True)
     shared_processors: list[structlog.types.Processor] = [
         structlog.contextvars.merge_contextvars,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.add_logger_name,
+        structlog.processors.add_log_level,
         timestamper,
         structlog.processors.StackInfoRenderer(),
     ]

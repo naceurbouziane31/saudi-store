@@ -8,6 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from .api.v1 import health as health_v1
+from .api.v1 import orders as orders_v1
+from .api.v1 import products as products_v1
+from .api.v1 import tracking as tracking_v1
 from .config import Settings, get_settings
 from .logging import configure_logging, get_logger
 
@@ -51,6 +54,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(GZipMiddleware, minimum_size=1024)
 
     app.include_router(health_v1.router)
+    app.include_router(products_v1.router)
+    app.include_router(orders_v1.router)
+    app.include_router(tracking_v1.router)
 
     return app
 
