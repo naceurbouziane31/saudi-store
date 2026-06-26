@@ -1,8 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter, Tajawal } from "next/font/google";
 
+import { CartDrawer } from "@/components/organisms/CartDrawer";
+import { CheckoutModal } from "@/components/organisms/CheckoutModal";
+import { ConsentBanner } from "@/components/organisms/ConsentBanner";
 import { Footer } from "@/components/organisms/Footer";
 import { Header } from "@/components/organisms/Header";
+import { UpsellModal } from "@/components/organisms/UpsellModal";
 import { WhatsAppFAB } from "@/components/organisms/WhatsAppFAB";
 import { env } from "@/lib/env";
 import "@/styles/globals.css";
@@ -80,6 +84,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <Footer />
         <WhatsAppFAB />
+        <CartDrawer />
+        <CheckoutModal />
+        <UpsellModal />
+        <ConsentBanner />
       </body>
     </html>
   );
