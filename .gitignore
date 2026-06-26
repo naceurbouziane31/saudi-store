@@ -1,1 +1,53 @@
+# --- Cursor MCP ---
 .cursor/mcp.json
+
+# --- Node / pnpm ---
+node_modules/
+.next/
+.next/standalone/
+.turbo/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+.DS_Store
+
+# --- Python / uv ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.venv/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+.tox/
+
+# --- Env files (real values) ---
+.env
+.env.local
+.env.*.local
+
+# --- Build / dist ---
+dist/
+build/
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+*.swp
+
+# --- Playwright ---
+test-results/
+playwright-report/
+playwright/.cache/
+
+# --- Misc ---
+*.log
+coverage/

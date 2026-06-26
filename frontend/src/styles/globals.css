@@ -1,0 +1,54 @@
+@import "./tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink-900);
+    font-family: var(--font-body);
+    font-feature-settings: "ss01", "ss02";
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    color: var(--color-ink-700);
+  }
+  /* Mirror chevrons in RTL */
+  [dir="rtl"] .icon-flip {
+    transform: scaleX(-1);
+  }
+  /* Visible focus ring */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+@layer utilities {
+  .container-wide {
+    max-width: var(--max-w-container, 1280px);
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @screen md {
+    .container-wide {
+      padding-inline: 1.5rem;
+    }
+  }
+  @screen lg {
+    .container-wide {
+      padding-inline: 2.5rem;
+    }
+  }
+}

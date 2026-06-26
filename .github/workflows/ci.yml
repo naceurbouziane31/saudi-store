@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend-lint-test-build:
+    name: Frontend · lint / typecheck / test / build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test -- --run
+      - name: Build
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://alnadara.shop
+          NEXT_PUBLIC_API_BASE_URL: https://api.alnadara.shop
+          NEXT_PUBLIC_WHATSAPP_NUMBER: "+96550001234"
+          NEXT_PUBLIC_SUPPORT_EMAIL: support@alnadara.shop
+
+  backend-lint-test:
+    name: Backend · ruff / mypy / pytest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: alnadara
+          POSTGRES_PASSWORD: alnadara
+          POSTGRES_DB: alnadara
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pip install uv
+      - name: Sync deps
+        run: uv sync --frozen
+      - name: Lint
+        run: |
+          uv run ruff check src tests
+          uv run ruff format --check src tests
+      - name: Typecheck
+        run: uv run mypy src
+      - name: Tests
+        env:
+          DATABASE_URL: postgres://alnadara:alnadara@localhost:5432/alnadara
+          APP_ENV: test
+          DEBUG: "true"
+          SECRET_KEY: test
+          INTERNAL_API_KEY: test
+          CODNETWORK_API_KEY: mock
+          ALLOWED_ORIGINS: http://localhost:3000
+        run: uv run pytest -q
+
+  docker-build:
+    name: Docker · build both images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend
+        run: docker build -t alnadara-backend backend
+      - name: Build frontend
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_SITE_URL=https://alnadara.shop \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=https://api.alnadara.shop \
+            --build-arg NEXT_PUBLIC_WHATSAPP_NUMBER=+96550001234 \
+            --build-arg NEXT_PUBLIC_SUPPORT_EMAIL=support@alnadara.shop \
+            -t alnadara-frontend frontend
