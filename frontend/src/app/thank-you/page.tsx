@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { CheckCircle2, MessagesSquare, Phone, Truck } from "lucide-react";
 
 import { Button } from "@/components/atoms/Button";
 import { WhatsAppIcon } from "@/components/icons/WhatsAppIcon";
+import { trackPurchase } from "@/lib/analytics/events";
 import { formatKwd } from "@/lib/currency";
 import { env } from "@/lib/env";
 import { useCartStore } from "@/stores/cartStore";
@@ -35,10 +36,34 @@ function ThankYouInner() {
   const clearCart = useCartStore((s) => s.clear);
 
   const orderRef = order?.order_ref ?? orderRefFromUrl;
+  const firedRef = useRef<string | null>(null);
 
   useEffect(() => {
     clearCart();
   }, [clearCart]);
+
+  useEffect(() => {
+    if (!orderRef || firedRef.current === orderRef) return;
+    if (!order) {
+      // We were navigated to the thank-you page in a fresh session without
+      // the store hydrated — we can't reconstruct the line items, so skip
+      // the Purchase event (the server-side CAPI from the order creation
+      // pipeline still fires it deterministically).
+      firedRef.current = orderRef;
+      return;
+    }
+    trackPurchase({
+      orderRef,
+      totalKwd: order.grand_total_kwd,
+      contents: order.items.map((i) => ({
+        id: i.sku,
+        name: i.title_ar,
+        quantity: 1,
+        price: i.line_total_kwd,
+      })),
+    });
+    firedRef.current = orderRef;
+  }, [order, orderRef]);
 
   return (
     <article className="container-wide max-w-3xl mx-auto py-12 lg:py-16">

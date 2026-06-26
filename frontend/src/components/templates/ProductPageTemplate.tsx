@@ -16,6 +16,7 @@ import { Badge } from "@/components/atoms/Badge";
 import { Button } from "@/components/atoms/Button";
 import { Price } from "@/components/atoms/Price";
 import { StarRating } from "@/components/atoms/StarRating";
+import { trackAddToCart, trackViewContent } from "@/lib/analytics/events";
 import { BenefitItem } from "@/components/molecules/BenefitItem";
 import { FAQItem } from "@/components/molecules/FAQItem";
 import { OfferCard } from "@/components/molecules/OfferCard";
@@ -58,6 +59,18 @@ export const ProductPageTemplate = ({ product }: ProductPageTemplateProps) => {
   );
 
   useEffect(() => {
+    // Fire ViewContent ~1s after mount so it doesn't fight LCP.
+    const t = window.setTimeout(() => {
+      trackViewContent({
+        sku: selectedVariant.sku,
+        name: product.titleAr,
+        priceKwd: selectedVariant.priceKwd,
+      });
+    }, 1000);
+    return () => window.clearTimeout(t);
+  }, [product.titleAr, selectedVariant.priceKwd, selectedVariant.sku]);
+
+  useEffect(() => {
     if (!offerSectionRef.current || typeof IntersectionObserver === "undefined") {
       return;
     }
@@ -74,6 +87,14 @@ export const ProductPageTemplate = ({ product }: ProductPageTemplateProps) => {
 
   const handleAddToCart = () => {
     add(buildCartLineForVariant(product.slug, selectedVariant));
+    trackAddToCart([
+      {
+        id: selectedVariant.sku,
+        name: product.titleAr,
+        quantity: 1,
+        price: selectedVariant.priceKwd,
+      },
+    ]);
   };
 
   const productTestimonials = TESTIMONIALS.filter(

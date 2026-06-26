@@ -9,6 +9,7 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/atoms/Button";
 import { CountdownTimer } from "@/components/atoms/CountdownTimer";
 import { getUpsellFor } from "@/data/products";
+import { trackUpsellAccept, trackUpsellImpression } from "@/lib/analytics/events";
 import { formatKwd } from "@/lib/currency";
 import { useCartProductSlugs, useCartStore } from "@/stores/cartStore";
 import { useCheckoutStore } from "@/stores/checkoutStore";
@@ -46,8 +47,16 @@ export const UpsellModal = () => {
   useEffect(() => {
     if (isOpen) {
       finishedRef.current = false;
+      if (upsell && orderRef) {
+        trackUpsellImpression({
+          sku: upsell.sku,
+          name: upsell.product.titleAr,
+          priceKwd: upsell.priceKwd,
+          orderRef,
+        });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, upsell, orderRef]);
 
   const accept = async () => {
     if (!orderRef || !upsell) {
@@ -63,6 +72,12 @@ export const UpsellModal = () => {
       });
       if (resp.ok) {
         markUpsell();
+        trackUpsellAccept({
+          sku: upsell.sku,
+          name: upsell.product.titleAr,
+          priceKwd: upsell.priceKwd,
+          orderRef,
+        });
       }
     } catch {
       // Non-blocking: still proceed to thank-you.

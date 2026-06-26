@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/atoms/Button";
 import { FormField } from "@/components/molecules/FormField";
+import { trackLead } from "@/lib/analytics/events";
 import { formatKwd } from "@/lib/currency";
 import { isValidKuwaitPhone, normalizeKuwaitLocal } from "@/lib/phone";
 import { checkoutSchema, type CheckoutInput } from "@/lib/validation";
@@ -91,6 +92,14 @@ export const CheckoutModal = () => {
       }
       const order = (await resp.json()) as OrderResponse;
       setOrder(order, data.name.trim());
+      trackLead(
+        items.map((i) => ({
+          id: i.sku,
+          name: i.titleAr,
+          quantity: 1,
+          price: i.lineTotalKwd,
+        })),
+      );
       closeCheckout();
       openUpsell();
     } catch (e) {

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter, Tajawal } from "next/font/google";
 
+import { AnalyticsRoot } from "@/components/analytics/AnalyticsRoot";
 import { CartDrawer } from "@/components/organisms/CartDrawer";
 import { CheckoutModal } from "@/components/organisms/CheckoutModal";
 import { ConsentBanner } from "@/components/organisms/ConsentBanner";
@@ -88,6 +89,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <CheckoutModal />
         <UpsellModal />
         <ConsentBanner />
+        <AnalyticsRoot />
       </body>
     </html>
   );

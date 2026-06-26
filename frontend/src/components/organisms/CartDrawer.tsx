@@ -8,6 +8,7 @@ import { Banknote, Minus, Plus, ShoppingBag, Trash2, Truck, X } from "lucide-rea
 import { Button } from "@/components/atoms/Button";
 import { CrossSellCard } from "@/components/molecules/CrossSellCard";
 import { formatKwd } from "@/lib/currency";
+import { trackInitiateCheckout } from "@/lib/analytics/events";
 import { getCrossSells } from "@/data/products";
 import { useCartProductSlugs, useCartStore, useCartSubtotal } from "@/stores/cartStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -26,6 +27,14 @@ export const CartDrawer = () => {
   const itemCount = items.length;
 
   const startCheckout = () => {
+    trackInitiateCheckout(
+      items.map((i) => ({
+        id: i.sku,
+        name: i.titleAr,
+        quantity: 1,
+        price: i.lineTotalKwd,
+      })),
+    );
     closeDrawer();
     openCheckout();
   };

@@ -20,6 +20,7 @@ from ...services.orders import (
     add_upsell_to_order,
     create_order,
 )
+from ...services.post_persist import run_order_pipeline
 from ...services.pricing import PricingError
 from ...utils.phone import normalize_kuwait_local, to_e164
 
@@ -115,8 +116,9 @@ async def post_order(
         grand_total_kwd=str(order.grand_total_kwd),
     )
 
-    # PR5 hook: dispatch_capi + push_to_codnetwork + push_to_sheets via BackgroundTasks.
-    background.add_task(_no_op_post_persist, order.order_ref)
+    # Fan-out: COD Network → Sheets → Meta/TikTok/Snap CAPI, each idempotent
+    # and logged to event_log for retry.
+    background.add_task(run_order_pipeline, order.order_ref)
 
     response.headers["Cache-Control"] = "no-store"
     if idempotency_key:
@@ -135,10 +137,6 @@ async def post_order(
     )
 
 
-async def _no_op_post_persist(order_ref: str) -> None:
-    log.info("orders.post_persist.placeholder", order_ref=order_ref)
-
-
 @router.post(
     "/{order_ref}/upsell",
     response_model=UpsellResponse,
@@ -152,6 +150,7 @@ async def post_upsell(
     order_ref: str,
     payload: UpsellRequest,
     response: Response,
+    background: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
 ) -> UpsellResponse:
     result = await add_upsell_to_order(session, order_ref=order_ref, upsell_sku=payload.sku)
@@ -172,6 +171,10 @@ async def post_upsell(
             status_code=422,
             detail={"error": {"code": "INVALID_SKU", "message": "upsell sku invalid"}},
         )
+
+    # Re-sync Sheets + push updated totals to CAPI. COD Network update on add
+    # is intentionally NOT triggered — agents collect bundle changes by phone.
+    background.add_task(run_order_pipeline, result.order_ref)
 
     response.headers["Cache-Control"] = "no-store"
     return UpsellResponse(
